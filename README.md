@@ -20,6 +20,54 @@ internet-shop-db/
 
 Скрипты для создания и администрирования БД интернет‑магазина (MS SQL Server).
 
+Добавим в итоговый README минимальный раздел про запуск контейнера и подключение.
+
+***
+
+
+## 0. Запуск SQL Server в Podman (macOS)
+
+1. Убедиться, что podman‑машина запущена:
+
+   ```bash
+   podman machine start
+   ```
+   или если такой нет то создать и запустить
+   ```bash
+   podman machine init --cpus=4 --disk-size=60 --memory=6144 -v $HOME:$HOME
+
+   podman machine start
+   ```
+
+2. Создать локальную папку для файлов импорта:
+
+   ```bash
+   mkdir -p $HOME/sql-data
+   ```
+
+3. Запустить контейнер с MS SQL Server:
+
+   ```bash
+   podman run -d \
+     --name mssql2022 \
+     -e "ACCEPT_EULA=Y" \
+     -e "MSSQL_SA_PASSWORD=StrongPass#1" \
+     -p 1433:1433 \
+     -v $HOME/sql-data:/data \
+     mcr.microsoft.com/mssql/server:2022-latest
+   ```
+
+   - сервер доступен на `localhost:1433`
+   - логин: `sa`
+   - пароль: `StrongPass#1`
+   - папка `$HOME/sql-data` на хосте видна в контейнере как `/data`. Заметьте, что файл data/Suppliers.txt либо нужно примонтировать, изменив соответствующую строку в команде, либо скопировать содержимое в $HOME/sql-data и запустить эту команду без изменений
+
+Проверка:
+
+```bash
+podman ps
+```
+
 ## 1. Подготовка
 
 Нужно:
@@ -67,13 +115,13 @@ SELECT * FROM OdrersInfo;
 ### 4.1 Импорт .txt (BULK INSERT)
 
 1. Скопировать файл `data/Suppliers.txt` в папку,
-   которая доступна серверу (например, `/data/Suppliers_eng.txt`).
+   которая доступна серверу (например, `/data/Suppliers.txt`).
 2. В базе `InternetShop` выполнить `sql/03_import_examples.sql`
    или прямо команду:
 
 ```sql
 BULK INSERT Suppliers
-FROM '/data/Suppliers_eng.txt'
+FROM '/data/Suppliers.txt'
 WITH (
     FIELDTERMINATOR = ';',
     ROWTERMINATOR   = '\n',
