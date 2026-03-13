@@ -1,0 +1,3 @@
+20;Global Market
+21;Tech Store
+22;Online Vendor
